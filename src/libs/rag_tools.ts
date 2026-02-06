@@ -8,7 +8,7 @@ const createEmbedding = async (text: string) => {
     }
 
     const result = await embed({
-      model: google.embedding("text-embedding-004"),
+      model: google.embedding("text-embedding-005"),
       value: text,
     });
 
