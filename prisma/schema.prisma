@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  email      String      @unique
+  username   String
+  reels      UserReel[]
+  team       Team?       @relation(fields: [teamId], references: [id])
+  member     TeamMember?
+  reciverId  String? @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  teamId     String?     @db.ObjectId
+}
+
+model Team {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  teamMembers TeamMember[]
+  users       User[]
+}
+
+model TeamMember {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique @db.ObjectId
+  teamId String @unique
+  role   Role   @default(MEMBER)
+  user   User   @relation(fields: [userId], references: [id])
+  team   Team   @relation(fields: [teamId], references: [id])
+}
+
+model Reel {
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  users      UserReel[]
+  url        String
+  thumbnail  String
+  title      String
+  audioTranscribe String?
+  niche String?
+  subNiche String?
+  nicheEmbeddings Float[]
+  subNicheEmbeddings Float[]
+  titleEmbeddings Float[]
+  audioTranscribeEmbeddings Float[]
+  ig_reel_id String     @unique
+  fileId     String     @unique
+  createdAt  DateTime   @default(now())
+}
+
+model UserReel {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  reelId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  reel   Reel?   @relation(fields: [reelId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
