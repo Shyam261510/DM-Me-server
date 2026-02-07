@@ -1,14 +1,15 @@
 import { embed } from "ai";
-import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
 
 const createEmbedding = async (text: string) => {
   try {
     if (!text?.trim()) {
       throw new Error("Text is required for embedding");
     }
+    console.log({ embed: process.env.EMBEDDING_MODEL });
 
     const result = await embed({
-      model: google.embedding(`${process.env.EMBEDDING_MODEL}`),
+      model: openai.embedding(`${process.env.EMBEDDING_MODEL!}`),
       value: text,
     });
 

@@ -1,5 +1,5 @@
 import { google } from "@ai-sdk/google";
-import z, { success } from "zod";
+import z from "zod";
 import { generateText, Output } from "ai";
 import { NicheCategorizationPrompt } from "../../Prompt";
 
