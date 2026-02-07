@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { extractUserId } from "../../helper/extarctUserId";
+import { extractEmail } from "../../helper/extractEmail";
 import { getUserInfo } from "../../helper/auth/getUserInfo";
 import { queues } from "../../queue/defination";
 import { queueNames } from "../../queue/config";
@@ -20,9 +20,9 @@ WebHookEventRouter.post("/", async (c) => {
       const attachments = webhook_event.message?.attachments;
 
       if (textMessage) {
-        const userId = extractUserId(textMessage);
-        if (userId) {
-          const response = await addReciverId(userId, senderID);
+        const email = extractEmail(textMessage);
+        if (email) {
+          const response = await addReciverId(email, senderID);
           if (!response.success) {
             console.log(`Issue in adding reciverId ${response.message}`);
           }
@@ -61,14 +61,14 @@ WebHookEventRouter.post("/", async (c) => {
   return c.text("EVENT_RECEIVED", 200);
 });
 
-const addReciverId = async (userId: string, reciverId: string) => {
-  const userResponse = await getUserInfo(userId);
+const addReciverId = async (email: string, reciverId: string) => {
+  const userResponse = await getUserInfo(undefined, email);
   if (!userResponse.success) {
     return { success: false, message: userResponse.message };
   }
 
   await queues.addInstaReciverIdQueue.add(queueNames.addInstagramReciverId, {
-    userId,
+    userId: userResponse.user.id,
     reciverId,
   });
 
