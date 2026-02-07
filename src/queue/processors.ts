@@ -118,7 +118,7 @@ export class Processors {
       createEmbedding(transcribe),
       createEmbedding(JSON.stringify(niche)),
       createEmbedding(JSON.stringify(subNiche)),
-      createEmbedding(title),
+      createEmbedding(title === "" || !title ? " " : title),
     ]);
 
     await queues.addInstagramReelToDBQueue.add(

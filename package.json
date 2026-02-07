@@ -5,7 +5,9 @@
     "worker": "bun run --hot src/worker.ts",
     "dev:all": "concurrently \"bun run dev\" \"bun run worker\"",
     "start": "bun run src/index.ts",
-    "start:worker": "bun run src/worker.ts"
+    "start:worker": "bun run src/worker.ts",
+    "build": "bun build src/index.ts src/worker.ts --outdir dist --target bun",
+    "start:all": "concurrently \"bun run start\" \"bun run start:worker\""
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.21",

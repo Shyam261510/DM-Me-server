@@ -30,6 +30,7 @@ COPY . .
 
 RUN bunx prisma generate
 
+EXPOSE 8000
 # 5 RUN command
 
 CMD ["bun","run", "dev:all"]

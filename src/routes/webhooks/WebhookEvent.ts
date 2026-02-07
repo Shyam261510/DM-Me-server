@@ -3,6 +3,8 @@ import { extractUserId } from "../../helper/extarctUserId";
 import { getUserInfo } from "../../helper/auth/getUserInfo";
 import { queues } from "../../queue/defination";
 import { queueNames } from "../../queue/config";
+import { prisma } from "../../libs/prisma";
+
 export const WebHookEventRouter = new Hono();
 
 WebHookEventRouter.post("/", async (c) => {
@@ -35,6 +37,11 @@ WebHookEventRouter.post("/", async (c) => {
           const { title, url, reel_video_id } = attachment.payload;
 
           const id = reel_video_id;
+          const user = await checkReciverExits(senderID);
+          if (!user.success) {
+            console.log({ success: false, message: user.message });
+            return c.text("EVENT_RECEIVED", 200);
+          }
 
           await queues.convertURLToVideoQueue.add(
             queueNames.convertUrlToVideo,
@@ -66,4 +73,21 @@ const addReciverId = async (userId: string, reciverId: string) => {
   });
 
   return { success: true, message: "ReciverId added successfully" };
+};
+
+// checking the user is exits based on the reciver id
+const checkReciverExits = async (reciverId: string) => {
+  if (!reciverId) {
+    return { success: false, message: "ReciverId is required" };
+  }
+  const user = await prisma.user.findUnique({
+    where: {
+      reciverId,
+    },
+  });
+  if (!user) {
+    return { success: false, message: "ReciverId not found" };
+  }
+
+  return { success: true, message: "ReciverId found" };
 };
