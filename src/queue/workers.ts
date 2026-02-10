@@ -17,6 +17,10 @@ const workerConfig: WorkerConfig[] = [
     processor: processors.urlToVideoProcessor,
   },
   {
+    queueName: queueNames.compressVideo,
+    processor: processors.compressVideoProcessor,
+  },
+  {
     queueName: queueNames.convertVideoToAudio,
     processor: processors.videoToAudioProcessor,
   },

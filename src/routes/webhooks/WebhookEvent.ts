@@ -37,9 +37,24 @@ WebHookEventRouter.post("/", async (c) => {
           const { title, url, reel_video_id } = attachment.payload;
 
           const id = reel_video_id;
-          const user = await checkReciverExits(senderID);
-          if (!user.success) {
-            console.log({ success: false, message: user.message });
+
+          // checking the user is exits based on the reciver id
+          const checkReciverExitsResponse = await checkReciverExits(senderID);
+          if (!checkReciverExitsResponse.success) {
+            console.log({
+              success: false,
+              message: checkReciverExitsResponse.message,
+            });
+            return c.text("EVENT_RECEIVED", 200);
+          }
+          const checkReelExitsResponse = await checkReelExits(
+            id,
+            checkReciverExitsResponse.user?.id as string,
+          );
+          // checking if the reel is already exists in DB then don't process it again then
+          // just used the exisitng reel from the db.
+
+          if (checkReelExitsResponse.success) {
             return c.text("EVENT_RECEIVED", 200);
           }
 
@@ -89,5 +104,31 @@ const checkReciverExits = async (reciverId: string) => {
     return { success: false, message: "ReciverId not found" };
   }
 
-  return { success: true, message: "ReciverId found" };
+  return { success: true, message: "ReciverId found", user };
+};
+
+// checking if the reel is already exists in DB then don't process it again then just used the exisitng reel from the db
+
+const checkReelExits = async (igReelId: string, userId: string) => {
+  if (!igReelId) {
+    return { success: false, message: "ReelId is required" };
+  }
+
+  // 2️⃣ Check existing reel
+  const existingReel = await prisma.reel.findUnique({
+    where: { ig_reel_id: igReelId },
+  });
+
+  if (existingReel) {
+    await prisma.userReel.create({
+      data: {
+        userId: userId,
+        reelId: existingReel.id,
+      },
+    });
+    console.log("Reel already exists in DB");
+    console.log("Reel added successfully");
+    return { success: true, message: "Reel already exists in DB" };
+  }
+  return { success: false, message: "Reel not found" };
 };

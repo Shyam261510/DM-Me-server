@@ -8,8 +8,10 @@ import {
   type GenerateEmbeddingJob,
   type AddInstagramReciverIdJob,
   type SendDMJob,
+  type CompreesVideoJob,
+  type AddInstagramReelJob,
 } from "./defination";
-import { type AddInstagramReelTypes } from "../helper/Instagram/addInstagramReel";
+
 import { convertURlToVideo } from "../helper/convert/convertURlToVideo";
 import { convertVideoToAudio } from "../helper/convert/convertVideoToAudio";
 import { generateTranscribe } from "../helper/ai/generateTranscribe";
@@ -19,6 +21,7 @@ import { createEmbedding } from "../libs/rag_tools";
 import { addInstaReciverId } from "../helper/Instagram/addInstaReciverId";
 import { sendDM } from "../workers/sendDM";
 import { queueNames } from "./config";
+import { compressedVideo } from "../helper/convert/compressVideo";
 
 export class Processors {
   async urlToVideoProcessor(job: Job<ConvertURLToVideoJob>) {
@@ -27,8 +30,8 @@ export class Processors {
     if (!response.success) {
       return { success: false, message: response.message };
     }
-
-    await queues.convertVideoToAudioQueue.add(queueNames.convertVideoToAudio, {
+    console.log("next step -> compressVideoQueue");
+    await queues.compressVideoQueue.add(queueNames.compressVideo, {
       videoPath: response.filePath as string,
       igReelId,
       igUserId,
@@ -38,6 +41,34 @@ export class Processors {
 
     return { success: true, message: "Video downloaded successfully" };
   }
+  async compressVideoProcessor(job: Job<CompreesVideoJob>) {
+    try {
+      const { videoPath, igReelId, igUserId, reelURL, title } = job.data;
+
+      const videoCompressResponse = await compressedVideo(videoPath);
+
+      if (!videoCompressResponse.success) {
+        throw new Error(videoCompressResponse.message);
+      }
+
+      await queues.convertVideoToAudioQueue.add(
+        queueNames.convertVideoToAudio,
+        {
+          videoPath: videoCompressResponse.videoPath as string,
+          igReelId,
+          igUserId,
+          reelURL,
+          title,
+        },
+      );
+
+      return { success: true, message: "Video compressed successfully" };
+    } catch (error: any) {
+      console.error("compressVideoProcessor error:", error);
+      throw error; // Let Bull retry
+    }
+  }
+
   async videoToAudioProcessor(job: Job<ConvertVideoToAudioJob>) {
     const { videoPath, igReelId, igUserId, reelURL, title } = job.data;
     const response = await convertVideoToAudio(videoPath);
@@ -63,32 +94,20 @@ export class Processors {
       return { success: false, message: response.message };
     }
 
-    const videoPath = audioPath.replace(/\.mp3$/i, ".mp4");
-
-    const videoFile = Bun.file(videoPath);
-    const audioFile = Bun.file(audioPath);
-
-    if (await videoFile.exists()) {
-      await videoFile.delete();
-      console.log("Video File deleted successfully");
-    }
-    if (await audioFile.exists()) {
-      await audioFile.delete();
-      console.log("Audio File deleted successfully");
-    }
-
     await queues.generateNicheQueue.add(queueNames.generateNiche, {
       transcript: response.text as string,
       title,
       igReelId,
       igUserId,
       reelURL,
+      audioPath,
     });
 
     return { success: true, message: "Transcribe generated successfully" };
   }
   async generateNicheProcessor(job: Job<GenerateNicheJob>) {
-    const { title, transcript, igReelId, igUserId, reelURL } = job.data;
+    const { title, transcript, igReelId, igUserId, reelURL, audioPath } =
+      job.data;
     const response = await generateNiche(title, transcript);
     if (!response.success) {
       return { success: false, message: response.message };
@@ -102,13 +121,22 @@ export class Processors {
       niche: response.niche as string,
       subNiche: response.subNiche as string,
       transcribe: transcript as string,
+      audioPath,
     });
 
     return { success: true, message: "Niche generated successfully" };
   }
   async generateEmbeddingProcessor(job: Job<GenerateEmbeddingJob>) {
-    const { title, igReelId, igUserId, reelURL, niche, subNiche, transcribe } =
-      job.data;
+    const {
+      title,
+      igReelId,
+      igUserId,
+      reelURL,
+      niche,
+      subNiche,
+      transcribe,
+      audioPath,
+    } = job.data;
     const [
       transcriptEmbedding,
       nicheEmbedding,
@@ -135,11 +163,12 @@ export class Processors {
         transcriptEmbedding: transcriptEmbedding.embedding,
         nicheEmbedding: nicheEmbedding.embedding,
         subNicheEmbedding: subNicheEmbedding.embedding,
+        audioPath,
       },
     );
     return { success: true, message: "Embedding generated successfully" };
   }
-  async addInstagramReelToDBProcessor(job: Job<AddInstagramReelTypes>) {
+  async addInstagramReelToDBProcessor(job: Job<AddInstagramReelJob>) {
     const {
       igReelId,
       igUserId,
@@ -152,6 +181,7 @@ export class Processors {
       transcriptEmbedding,
       nicheEmbedding,
       subNicheEmbedding,
+      audioPath,
     } = job.data;
 
     const response = await addInstagramReel({
@@ -166,6 +196,7 @@ export class Processors {
       transcriptEmbedding,
       nicheEmbedding,
       subNicheEmbedding,
+      audioPath,
     });
     if (!response.success) {
       return { success: false, message: response.message };

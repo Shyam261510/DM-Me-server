@@ -5,6 +5,9 @@ import { AddInstagramReelTypes } from "../helper/Instagram/addInstagramReel";
 export interface ConvertURLToVideoJob extends AddInstagramReelTypes {
   fileName: string;
 }
+export interface CompreesVideoJob extends AddInstagramReelTypes {
+  videoPath: string;
+}
 export interface ConvertVideoToAudioJob extends AddInstagramReelTypes {
   videoPath: string;
 }
@@ -13,11 +16,13 @@ export interface GenerateTranscribeJob extends AddInstagramReelTypes {
 }
 export interface GenerateNicheJob extends AddInstagramReelTypes {
   transcript: string;
+  audioPath: string;
 }
 export interface GenerateEmbeddingJob extends AddInstagramReelTypes {
   transcribe: string;
   niche: string;
   subNiche: string;
+  audioPath: string;
 }
 
 export interface AddInstagramReciverIdJob {
@@ -29,6 +34,9 @@ export interface SendDMJob {
   reciverId: string;
   message: string;
 }
+export interface AddInstagramReelJob extends AddInstagramReelTypes {
+  audioPath: string;
+}
 
 export const queues = {
   convertURLToVideoQueue: new Queue<ConvertURLToVideoJob>(
@@ -38,6 +46,10 @@ export const queues = {
       defaultJobOptions,
     },
   ),
+  compressVideoQueue: new Queue<CompreesVideoJob>(queueNames.compressVideo, {
+    connection,
+    defaultJobOptions,
+  }),
   convertVideoToAudioQueue: new Queue<ConvertVideoToAudioJob>(
     queueNames.convertVideoToAudio,
     {
@@ -57,7 +69,7 @@ export const queues = {
     defaultJobOptions,
   }),
 
-  addInstagramReelToDBQueue: new Queue<AddInstagramReelTypes>(
+  addInstagramReelToDBQueue: new Queue<AddInstagramReelJob>(
     queueNames.addInstagramReelToDB,
     {
       connection,

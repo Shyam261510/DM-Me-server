@@ -2,7 +2,7 @@ export const connection = {
   host: process.env.REDIS_HOST!,
   port: parseInt(process.env.REDIS_PORT! ?? "6379"),
 };
-console.log(connection);
+
 export const defaultJobOptions = {
   attempts: 3,
   backoff: {
@@ -19,6 +19,7 @@ export const defaultJobOptions = {
 
 export const queueNames = {
   convertUrlToVideo: "convert-url-to-video",
+  compressVideo: "compress-video",
   convertVideoToAudio: "convert-video-to-audio",
   generateTranscribe: "generate-transcribe",
   generateNiche: "generate-niche",
