@@ -1,79 +1,57 @@
-import { json } from "zod";
 import { prisma } from "../../libs/prisma";
+import { handelAsyc } from "../validation/handelAsync";
+
+const INCLUDE_USER = {
+  reels: {
+    include: {
+      reel: true,
+    },
+  },
+  group: {
+    include: {
+      groupMembers: {
+        include: {
+          user: {
+            include: {
+              reels: {
+                include: {
+                  reel: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};
 
 export const getUserInfo = async (userId?: string, email?: string) => {
-  try {
-    if (!userId && !email) {
-      return { success: false, message: "Inputs are missing." };
-    }
-    let user = userId
-      ? await prisma.user.findFirst({
-          where: {
-            id: userId,
-          },
-          include: {
-            reels: {
-              include: {
-                reel: true,
-              },
-            },
-            team: {
-              include: {
-                teamMembers: {
-                  include: {
-                    user: {
-                      include: {
-                        reels: {
-                          include: {
-                            reel: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        })
-      : await prisma.user.findFirst({
-          where: {
-            email,
-          },
-          include: {
-            reels: {
-              include: {
-                reel: true,
-              },
-            },
-            team: {
-              include: {
-                teamMembers: {
-                  include: {
-                    user: {
-                      include: {
-                        reels: {
-                          include: {
-                            reel: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        });
-
-    if (!user) {
-      return { success: false, message: "User not found" };
-    }
-
-    return { success: true, user };
-  } catch (error: any) {
-    console.error("Error fetching user info:", error);
-
-    return { success: false, message: "Internal server error" };
+  if (!userId && !email) {
+    return { success: false, message: "Inputs are missing." };
   }
+
+  const res = await handelAsyc(
+    async () => {
+      let user = await prisma.user.findFirst({
+        where: {
+          id: userId ?? email,
+        },
+        include: INCLUDE_USER,
+      });
+
+      if (!user) {
+        return { success: false, message: "User not found" };
+      }
+
+      return user;
+    },
+    `Fetching user info failed for ${userId ? `UserId ${userId}` : `email ${email}`}`,
+  );
+
+  if (!res.success) {
+    return { success: false, message: res.message };
+  }
+
+  return { success: true, user: res.data };
 };

@@ -7,7 +7,9 @@ import {
   WebHookEventRouter,
   SignInRouter,
   AddInstagramReelRouter,
+  CreateGroupRouter,
 } from "./routes";
+
 import { serve } from "bun";
 import { prisma } from "./libs/prisma";
 import axios from "axios";
@@ -35,6 +37,8 @@ app.route("/api/get_user_info", UserInfoAuthRouter);
 app.route("/api/addInstagramReel", AddInstagramReelRouter);
 
 app.route("/api/signin", SignInRouter);
+
+app.route("/api/createGroup", CreateGroupRouter);
 
 app.get("/api/deleteVideo", async (c) => {
   const imageKitPrivateKey = process.env.IMAGEKIT_PRIVATE_KEY!;

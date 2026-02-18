@@ -13,27 +13,31 @@ model User {
   email      String      @unique
   username   String
   reels      UserReel[]
-  team       Team?       @relation(fields: [teamId], references: [id])
-  member     TeamMember?
+  group       Group[]       
+  groupMembers GroupMember[]
   reciverId  String? @unique
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  teamId     String?     @db.ObjectId
+  groupId     String?     @db.ObjectId
 }
 
-model Team {
+model Group {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
-  teamMembers TeamMember[]
-  users       User[]
+  groupName    String      
+  groupMembers GroupMember[]
+  adminId      String      @unique @db.ObjectId
+  admin        User        @relation(fields: [adminId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
-model TeamMember {
+model GroupMember {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
   userId String @unique @db.ObjectId
-  teamId String @unique
+  groupId String @unique
   role   Role   @default(MEMBER)
   user   User   @relation(fields: [userId], references: [id])
-  team   Team   @relation(fields: [teamId], references: [id])
+  group   Group   @relation(fields: [groupId], references: [id])
 }
 
 model Reel {
