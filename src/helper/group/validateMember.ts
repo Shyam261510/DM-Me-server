@@ -1,42 +1,52 @@
+import { success } from "zod";
+import { User } from "../../generated/prisma/client";
 import { prisma } from "../../libs/prisma";
 import { getUserInfo } from "../auth/getUserInfo";
+import { handelAsyc } from "../validation/handelAsync";
 
-export const validateMember = async (userId: string) => {
-  try {
-    if (!userId) {
-      return {
-        success: false,
-        message: "User ID is required",
-      };
-    }
+export const validateMember = async (userId: string, groupId: string) => {
+  if (!userId || !groupId) {
+    return {
+      success: false,
+      message: "Invalid Inputs",
+    };
+  }
 
+  const response = await handelAsyc(async () => {
     const userResponse = await getUserInfo(userId);
+
     if (!userResponse.success) {
-      return { success: false, message: userResponse.message };
+      throw new Error(userResponse.message);
     }
 
-    const groupMember = await prisma.groupMember.findFirst({
+    const group = await prisma.group.findFirst({
       where: {
-        userId,
+        id: groupId,
       },
       include: {
-        user: true,
+        groupMembers: true,
       },
     });
 
-    if (groupMember) {
-      return {
-        success: false,
-        message: `${groupMember.role === "ADMIN" ? "You" : groupMember.user.username} are already in a team`,
-      };
+    if (!group) {
+      throw new Error("Group not found");
     }
 
-    return { success: true, message: "User is not in a team" };
-  } catch (error: any) {
-    console.error("Error validating team member:", error);
-    return {
-      success: false,
-      message: "Something went wrong while validating the member",
-    };
+    const isMemberExits = group?.groupMembers.some(
+      (member) => member.userId === userId,
+    );
+
+    if (isMemberExits) {
+      throw new Error(
+        `Member ${(userResponse.user as User).username} is already exits in the group`,
+      );
+    }
+
+    return { message: "User is not in the team" };
+  }, `Error validating team member`);
+
+  if (!response.success) {
+    return { success: false, message: response.message };
   }
+  return { success: true, message: response.data?.message };
 };

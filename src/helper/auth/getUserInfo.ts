@@ -1,31 +1,6 @@
 import { prisma } from "../../libs/prisma";
 import { handelAsyc } from "../validation/handelAsync";
 
-const INCLUDE_USER = {
-  reels: {
-    include: {
-      reel: true,
-    },
-  },
-  group: {
-    include: {
-      groupMembers: {
-        include: {
-          user: {
-            include: {
-              reels: {
-                include: {
-                  reel: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-};
-
 export const getUserInfo = async (userId?: string, email?: string) => {
   if (!userId && !email) {
     return { success: false, message: "Inputs are missing." };
@@ -37,11 +12,10 @@ export const getUserInfo = async (userId?: string, email?: string) => {
         where: {
           id: userId ?? email,
         },
-        include: INCLUDE_USER,
       });
 
       if (!user) {
-        return { success: false, message: "User not found" };
+        throw new Error("User not found");
       }
 
       return user;

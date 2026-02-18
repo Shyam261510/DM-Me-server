@@ -10,6 +10,7 @@ export const handelAsyc = async <T>(
 ): Promise<ServiceResult<T>> => {
   try {
     const data = await operation();
+
     return {
       success: true,
       data,
@@ -22,7 +23,7 @@ export const handelAsyc = async <T>(
 
     return {
       success: false,
-      message: `${context}: ${errorMessage}`,
+      message: errorMessage,
     };
   }
 };

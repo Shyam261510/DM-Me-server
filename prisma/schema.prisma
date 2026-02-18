@@ -8,18 +8,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+
 model User {
   id         String      @id @default(auto()) @map("_id") @db.ObjectId
   email      String      @unique
   username   String
   reels      UserReel[]
-  group       Group[]       
+  groups       Group[]       
   groupMembers GroupMember[]
   reciverId  String? @unique
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  groupId     String?     @db.ObjectId
 }
+
 
 model Group {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
@@ -39,6 +41,7 @@ model GroupMember {
   user   User   @relation(fields: [userId], references: [id])
   group   Group   @relation(fields: [groupId], references: [id])
 }
+
 
 model Reel {
   id         String     @id @default(auto()) @map("_id") @db.ObjectId

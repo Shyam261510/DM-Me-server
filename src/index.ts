@@ -8,6 +8,8 @@ import {
   SignInRouter,
   AddInstagramReelRouter,
   CreateGroupRouter,
+  AddMemberRouter,
+  GetReelRouter,
 } from "./routes";
 
 import { serve } from "bun";
@@ -34,11 +36,15 @@ app.route("/webhook", WebHookEventRouter);
 
 app.route("/api/get_user_info", UserInfoAuthRouter);
 
+app.route("/api/getReels", GetReelRouter);
+
 app.route("/api/addInstagramReel", AddInstagramReelRouter);
 
 app.route("/api/signin", SignInRouter);
 
 app.route("/api/createGroup", CreateGroupRouter);
+
+app.route("/api/addMember", AddMemberRouter);
 
 app.get("/api/deleteVideo", async (c) => {
   const imageKitPrivateKey = process.env.IMAGEKIT_PRIVATE_KEY!;

@@ -46,24 +46,24 @@ export const addMember = async ({
     return { success: false, message: validateBody.message };
   }
 
-  const res = await handelAsyc(async () => {
+  const response = await handelAsyc(async () => {
     // 2️⃣ If validation is already done, directly add member
-    if (!isAlreadyValidated) {
+    if (isAlreadyValidated) {
       await prisma.groupMember.create({
         data: {
           userId,
           groupId,
-          role: role === "ADMIN" ? Role.ADMIN : Role.MEMBER,
+          role: Role.ADMIN,
         },
       });
 
-      return { success: true, message: "Member added successfully" };
+      return { message: "Member added successfully" };
     }
 
     // 3️⃣ Validate whether user already belongs to a team
-    const validateResponse = await validateMember(userId);
+    const validateResponse = await validateMember(userId, groupId);
     if (!validateResponse.success) {
-      return validateResponse;
+      throw new Error(validateResponse.message);
     }
 
     // 4️⃣ Create team member entry
@@ -75,8 +75,17 @@ export const addMember = async ({
       },
     });
 
-    return { success: true, message: "Member added successfully" };
-  }, `Error in add creating group for userId ${userId}`);
+    return {
+      message: "Member added successfully",
+    };
+  }, `Error in add Member in the Group for userId ${userId}`);
 
-  return res;
+  if (!response.success) {
+    return { success: false, message: response.message };
+  }
+
+  return {
+    success: true,
+    message: response.data?.message,
+  };
 };
