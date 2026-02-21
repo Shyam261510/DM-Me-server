@@ -11,6 +11,9 @@ GetReelRouter.get("/", async (c) => {
   const userId = c.req.query("userId");
   const cursor = Number(c.req.query("cursor")) || 0;
   const limit = Number(c.req.query("limit")) || 8;
+  if (!userId) {
+    return c.json({ success: false, message: "Invalid inputs" }, 401);
+  }
 
   const userResponse = await getUserInfo(userId);
 
@@ -43,7 +46,11 @@ const getReels = async (user: User, cursor: number, limit: number) => {
       const reelUrl = await getReelUrl(reel.reel?.fileName as string);
       reelsInfo.push({ ...reel.reel, url: reelUrl.data || "" });
     }
-    return reelsInfo;
+    return {
+      reels: reelsInfo,
+      cursor: cursor + limit,
+      hasNext: reelsInfo.length !== 0,
+    };
   }, `Error in getting reels for user :${user.username}`);
 
   return response;

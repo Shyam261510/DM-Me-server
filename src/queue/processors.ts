@@ -204,6 +204,7 @@ export class Processors {
     console.log("Reel added successfully to DB");
     return { success: true, message: "Reel added successfully to DB" };
   }
+
   async addInstaReciverIdProcessor(job: Job<AddInstagramReciverIdJob>) {
     const { userId, reciverId } = job.data;
     const response = await addInstaReciverId(userId, reciverId);
@@ -216,6 +217,7 @@ export class Processors {
     });
     return { success: true, message: "ReciverId added successfully" };
   }
+  
   async sendDMProcessor(job: Job<SendDMJob>) {
     const { reciverId, message } = job.data;
     const response = await sendDM(reciverId, message);
