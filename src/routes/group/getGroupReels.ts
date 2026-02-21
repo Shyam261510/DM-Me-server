@@ -39,8 +39,9 @@ GetGroupReelsRouter.get("/", async (c) => {
     const reelsInfo = [];
     for (const reel of groupReels) {
       const reelUrl = await getReelUrl(reel.reel?.fileName as string);
-      reelsInfo.push({ ...reel.reel, url: reelUrl.data || "" });
+      reelsInfo.push({ ...reel, reel: { ...reel.reel, url: reelUrl.data } });
     }
+
     return {
       reels: reelsInfo,
       cursor: cursor + limit,
