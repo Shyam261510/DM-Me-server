@@ -10,11 +10,12 @@ import {
   CreateGroupRouter,
   AddMemberRouter,
   GetReelRouter,
+  GetGroupRouter,
+  GetGroupReelsRouter,
 } from "./routes";
-
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { Bucket } from "./libs/Bucket";
 import { serve } from "bun";
-import { prisma } from "./libs/prisma";
-import axios from "axios";
 
 config();
 
@@ -44,40 +45,26 @@ app.route("/api/signin", SignInRouter);
 
 app.route("/api/createGroup", CreateGroupRouter);
 
+app.route("/api/getGroupInfo", GetGroupRouter);
+
+app.route("/api/getGroupReels", GetGroupReelsRouter);
+
 app.route("/api/addMember", AddMemberRouter);
 
-app.get("/api/deleteVideo", async (c) => {
-  const imageKitPrivateKey = process.env.IMAGEKIT_PRIVATE_KEY!;
-  const ImageKitAuth = Buffer.from(`${imageKitPrivateKey}:`).toString("base64");
-  const reels = await prisma.reel.findMany({});
-
-  for (const reel of reels) {
-    const imageKitId = reel.fileId;
-    // ✅ Prepare API options for deleting image from ImageKit
-    const options = {
-      method: "DELETE",
-      url: `https://api.imagekit.io/v1/files/${imageKitId}`,
-      headers: {
-        Accept: "application/json",
-        Authorization: `Basic ${ImageKitAuth}`,
-      },
-    };
-
-    try {
-      // ✅ Delete image from ImageKit first
-      const response = await axios.request(options);
-
-      return c.json({ success: true, response: response.data });
-    } catch (error: any) {
-      console.error(
-        "❌ ImageKit Deletion Error:",
-        error.response?.data || error.message,
-      );
-      return c.json(
-        { success: false, message: "Failed to delete image from ImageKit." },
-        { status: 500 },
-      );
-    }
+app.delete("/deleteVideo", async (c) => {
+  const fileName = "video.mp4";
+  const command = new DeleteObjectCommand({
+    Bucket: process.env.BUCKET_NAME!,
+    Key: fileName,
+  });
+  try {
+    const response = await Bucket.send(command);
+    console.log(`Successfully deleted object: ${fileName}`, response);
+    return c.json({ success: true, message: "Deletion successful" });
+    // Note: The delete operation is idempotent; it responds with success even if the object didn't exist.
+  } catch (err) {
+    console.error(`Error deleting object: ${fileName}`, err);
+    return c.json({ success: false, error: "Deletion failed" }, 500);
   }
 });
 

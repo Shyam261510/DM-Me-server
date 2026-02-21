@@ -6,7 +6,6 @@ const createEmbedding = async (text: string) => {
     if (!text?.trim()) {
       throw new Error("Text is required for embedding");
     }
-    console.log({ embed: process.env.EMBEDDING_MODEL });
 
     const result = await embed({
       model: openai.embedding(`${process.env.EMBEDDING_MODEL!}`),
@@ -23,5 +22,7 @@ const createEmbedding = async (text: string) => {
     throw error; // propagate (used by retrieveDocument)
   }
 };
+
+// Helper function to calculate cosine similarity
 
 export { createEmbedding };

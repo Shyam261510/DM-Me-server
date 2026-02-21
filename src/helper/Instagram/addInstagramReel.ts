@@ -1,5 +1,5 @@
 import { prisma } from "../../libs/prisma";
-import { uploadToImageKit } from "../ImageKit/uploadToImageKit";
+import { uploadToBucket } from "../cloudflare/uploadToBucket";
 import { unwrapOrThrow } from "../unwrapOrThrow";
 
 export interface AddInstagramReelTypes {
@@ -56,7 +56,7 @@ export const addInstagramReel = async ({
     // but differ in extension .mp4 and .mp3
     try {
       upload = unwrapOrThrow(
-        await uploadToImageKit(audioPath as string, title),
+        await uploadToBucket(audioPath!, title.slice(0, 20)),
         "Upload failed",
       );
     } catch (err) {
@@ -73,10 +73,8 @@ export const addInstagramReel = async ({
         const newReel = await tx.reel.create({
           data: {
             ig_reel_id: igReelId,
-            url: upload.url!,
-            fileId: upload.fileId!,
             title,
-            thumbnail: upload.thumnailImage ?? "",
+            fileName: title.slice(0, 20),
             audioTranscribe: transcribe ?? "",
             niche: niche ?? "",
             subNiche: subNiche ?? "",

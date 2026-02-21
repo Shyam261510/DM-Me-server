@@ -9,9 +9,7 @@ export const getUserInfo = async (userId?: string, email?: string) => {
   const res = await handelAsyc(
     async () => {
       let user = await prisma.user.findFirst({
-        where: {
-          id: userId ?? email,
-        },
+        where: userId ? { id: userId } : { email },
       });
 
       if (!user) {

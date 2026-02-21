@@ -11,7 +11,6 @@ CreateGroupRouter.post("/", async (c) => {
   const { userId, groupName } = await c.req.json();
 
   // Request log (important for tracing)
-  console.info("[CreateGroup] Request", { userId, groupName });
 
   // Input validation
   if (!userId || !groupName) {
