@@ -48,6 +48,10 @@ const workerConfig: WorkerConfig[] = [
     queueName: queueNames.sendDM,
     processor: processors.sendDMProcessor,
   },
+  {
+    queueName: queueNames.sendMessage,
+    processor: processors.sendMessageProcessor,
+  },
 ];
 
 export function createWorkers() {

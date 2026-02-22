@@ -1,3 +1,55 @@
+/**
+ * ============================================================
+ * WebHookEventRouter — Instagram Webhook Workflow Overview
+ * ============================================================
+ *
+ *  ENTRY POINT
+ *  ───────────
+ *  POST /  ← Instagram sends all DM events here
+ *  Guards: only processes body.object === "instagram"
+ *
+ *  LOOP: for each entry → entry.messaging[0]
+ *  ─────────────────────────────────────────
+ *
+ *  1️⃣  TEXT MESSAGE FLOW  (textMessage && senderID)
+ *  ──────────────────────────────────────────────────
+ *  • Skip internal confirmation messages from JustDM account
+ *  • extractEmail()      – parse email address out of the message text
+ *  • getUserInfo()       – look up the user by extracted email
+ *      └─ found  → addReciverId()
+ *                   ├─ getUserInfo() again to validate userId
+ *                   └─ queue job → addInstaReciverIdQueue
+ *      └─ not found / no email → log and continue
+ *
+ *  2️⃣  ATTACHMENT FLOW  (attachments && senderID)
+ *  ─────────────────────────────────────────────────
+ *  • Loop every attachment, skip anything that isn't "ig_reel"
+ *  • For each ig_reel:
+ *      ├─ checkReciverExits(senderID)
+ *      │    └─ prisma.user.findUnique({ reciverId })
+ *      │    └─ fail → skip this reel
+ *      │
+ *      ├─ checkReelExits(igReelId, userId)
+ *      │    └─ reel exists in DB → create UserReel link → skip queue
+ *      │    └─ reel not found   → proceed to queue
+ *      │
+ *      └─ queues.convertURLToVideoQueue.add()
+ *           payload: { igReelId, igUserId, fileName, title, reelURL }
+ *
+ *  ALWAYS RETURNS
+ *  ──────────────
+ *  c.text("EVENT_RECEIVED", 200)  — Instagram requires a 200 to stop retries
+ *
+ *  HELPER FUNCTIONS
+ *  ────────────────
+ *  addReciverId(userId, reciverId)    – validate user → queue link job
+ *  checkReciverExits(reciverId)       – DB lookup by reciverId → return user
+ *  checkReelExits(igReelId, userId)   – DB lookup by ig_reel_id →
+ *                                       if found, create UserReel + skip queue
+ *
+ * ============================================================
+ */
+
 import { Hono } from "hono";
 import { extractEmail } from "../../helper/extractEmail";
 import { getUserInfo } from "../../helper/auth/getUserInfo";
@@ -167,6 +219,7 @@ WebHookEventRouter.post("/", async (c) => {
   }
 
   console.log("========== WEBHOOK END ==========\n");
+  // Always return 200 — Instagram will keep retrying until it receives one
   return c.text("EVENT_RECEIVED", 200);
 });
 

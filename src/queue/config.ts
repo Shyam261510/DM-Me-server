@@ -27,4 +27,5 @@ export const queueNames = {
   generateEmbedding: "generate-embedding",
   addInstagramReciverId: "add-instagram-reciver-id",
   sendDM: "send-dm",
+  sendMessage: "send-message",
 };

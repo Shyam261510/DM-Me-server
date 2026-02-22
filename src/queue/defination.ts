@@ -1,6 +1,7 @@
 import { Queue } from "bullmq";
 import { connection, defaultJobOptions, queueNames } from "./config";
 import { AddInstagramReelTypes } from "../helper/Instagram/addInstagramReel";
+import { sendMessage } from "../workers/sendMessage";
 
 export interface ConvertURLToVideoJob extends AddInstagramReelTypes {
   fileName: string;
@@ -36,6 +37,12 @@ export interface SendDMJob {
 }
 export interface AddInstagramReelJob extends AddInstagramReelTypes {
   audioPath: string;
+}
+
+export interface SendMessageJob {
+  email: string;
+  message: string;
+  subject: string;
 }
 
 export const queues = {
@@ -91,6 +98,10 @@ export const queues = {
     },
   ),
   sendDMQueue: new Queue<SendDMJob>(queueNames.sendDM, {
+    connection,
+    defaultJobOptions,
+  }),
+  sendMessageQueue: new Queue<SendMessageJob>(queueNames.sendMessage, {
     connection,
     defaultJobOptions,
   }),

@@ -10,6 +10,7 @@ import {
   type SendDMJob,
   type CompreesVideoJob,
   type AddInstagramReelJob,
+  type SendMessageJob,
 } from "./defination";
 
 import { convertURlToVideo } from "../helper/convert/convertURlToVideo";
@@ -22,6 +23,7 @@ import { addInstaReciverId } from "../helper/Instagram/addInstaReciverId";
 import { sendDM } from "../workers/sendDM";
 import { queueNames } from "./config";
 import { compressedVideo } from "../helper/convert/compressVideo";
+import { sendMessage } from "../workers/sendMessage";
 
 export class Processors {
   async urlToVideoProcessor(job: Job<ConvertURLToVideoJob>) {
@@ -217,7 +219,7 @@ export class Processors {
     });
     return { success: true, message: "ReciverId added successfully" };
   }
-  
+
   async sendDMProcessor(job: Job<SendDMJob>) {
     const { reciverId, message } = job.data;
     const response = await sendDM(reciverId, message);
@@ -226,5 +228,15 @@ export class Processors {
     }
     console.log("DM sent successfully");
     return { success: true, message: "DM sent successfully" };
+  }
+
+  async sendMessageProcessor(job: Job<SendMessageJob>) {
+    const { email, subject, message } = job.data;
+    const response = await sendMessage(message, subject, email);
+    if (!response.success) {
+      return { success: false, message: response.message };
+    }
+    console.log(`Email sent successfully to email: ${email}`);
+    return { success: true, message: "Email sent successfully" };
   }
 }
