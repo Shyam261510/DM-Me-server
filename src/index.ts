@@ -12,6 +12,7 @@ import {
   GetReelRouter,
   GetGroupRouter,
   GetGroupReelsRouter,
+  SendInvitionRouter,
 } from "./routes";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { Bucket } from "./libs/Bucket";
@@ -50,6 +51,8 @@ app.route("/api/getGroupInfo", GetGroupRouter);
 app.route("/api/getGroupReels", GetGroupReelsRouter);
 
 app.route("/api/addMember", AddMemberRouter);
+
+app.route("/api/sendInvitation", SendInvitionRouter);
 
 app.delete("/deleteVideo", async (c) => {
   const fileName = "video.mp4";

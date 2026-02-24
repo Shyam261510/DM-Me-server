@@ -9,7 +9,7 @@ import { AddMemberRouter } from "./group/addMemberRouter";
 import { GetGroupRouter } from "./group/getGroupInfoRouter";
 import { GetReelRouter } from "./reels/GetReelRouter";
 import { GetGroupReelsRouter } from "./group/getGroupReels";
-
+import { SendInvitionRouter } from "./email/sendInvitationRouter";
 export {
   verifyWebhookRouter,
   WebHookEventRouter,
@@ -21,4 +21,5 @@ export {
   GetReelRouter,
   GetGroupRouter,
   GetGroupReelsRouter,
+  SendInvitionRouter,
 };

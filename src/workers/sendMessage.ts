@@ -1,14 +1,17 @@
 import nodemailer from "nodemailer";
 import { handelAsyc } from "../helper/validation/handelAsync";
+import { config } from "dotenv";
 
+config();
 const APP_PASSWORD = process.env.EMAIL_APP_PASSWORD!;
 const SENDER_EMAIL = process.env.SENDER_EMAIL!;
-
 export const sendMessage = async (
   message: string,
   subject: string,
   notifer_email: string,
 ) => {
+  console.log({ APP_PASSWORD, SENDER_EMAIL });
+
   const response = await handelAsyc(async () => {
     const transporter = nodemailer.createTransport({
       port: 587,
@@ -24,7 +27,7 @@ export const sendMessage = async (
       from: `<${notifer_email}>`,
       to: notifer_email,
       subject,
-      text: message,
+      html: message,
     });
     return { message: "Email send successfully" };
   }, "Error in sending message");

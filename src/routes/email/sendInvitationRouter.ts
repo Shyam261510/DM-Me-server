@@ -35,6 +35,7 @@ import { Hono } from "hono";
 import z from "zod";
 import { queueNames } from "../../queue/config";
 import { getUserInfo } from "../../helper/auth/getUserInfo";
+import { getEmailBody } from "../../libs/getEmailBody";
 
 export const SendInvitionRouter = new Hono();
 
@@ -43,6 +44,7 @@ const SendInvitionSchema = z.object({
   emails: z.array(z.email("Please enter a valid email address")),
   groupName: z.string().min(1, "Group name is required"),
   userId: z.string().min(1, "User id is required"),
+  groupId: z.string().min(1, "Group id is required"),
 });
 
 SendInvitionRouter.post("/", async (c) => {
@@ -54,7 +56,7 @@ SendInvitionRouter.post("/", async (c) => {
     return c.json({ success: false, message: validate.error.message });
   }
 
-  const { emails, userId, groupName } = validate.data;
+  const { emails, userId, groupName, groupId } = validate.data;
 
   // Fetch the invitor's profile to get their username for the email subject
   const userResponse = await getUserInfo(userId);
@@ -67,7 +69,11 @@ SendInvitionRouter.post("/", async (c) => {
     await queues.sendMessageQueue.add(queueNames.sendMessage, {
       email,
       subject: `${userResponse?.user?.username} invited you to join ${groupName} group on Just DM`,
-      message: `Click the below link to join ${groupName} group on Just DM.`,
+      message: getEmailBody(
+        userResponse?.user?.username as string,
+        groupName,
+        groupId,
+      ),
     });
   }
 
