@@ -85,7 +85,7 @@ export const getEmailBody = (
                     <table cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td align="center">
-                          <a href="https://yourdomain.com/invite/${groupId}"
+                          <a href="http://localhost:3000/invite/${groupId}"
                             target="_blank"
                             style="background:#3b82f6; color:#ffffff; text-decoration:none;
                             padding:14px 36px; border-radius:10px; font-weight:600;

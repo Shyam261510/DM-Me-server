@@ -8,11 +8,12 @@ import {
   SignInRouter,
   AddInstagramReelRouter,
   CreateGroupRouter,
-  AddMemberRouter,
+  JoinGroupRouter,
   GetReelRouter,
   GetGroupRouter,
   GetGroupReelsRouter,
   SendInvitionRouter,
+  GroupRouter,
 } from "./routes";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { Bucket } from "./libs/Bucket";
@@ -48,9 +49,11 @@ app.route("/api/createGroup", CreateGroupRouter);
 
 app.route("/api/getGroupInfo", GetGroupRouter);
 
+app.route("/api/groups", GroupRouter);
+
 app.route("/api/getGroupReels", GetGroupReelsRouter);
 
-app.route("/api/addMember", AddMemberRouter);
+app.route("/api/joinGroup", JoinGroupRouter);
 
 app.route("/api/sendInvitation", SendInvitionRouter);
 
