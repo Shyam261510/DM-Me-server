@@ -55,12 +55,13 @@ export const addInstagramReel = async ({
     // use audio path to convert the get the video path because the video and audio file name is same
     // but differ in extension .mp4 and .mp3
     try {
+      console.log({ title: removeEmjoies(title) });
       upload = unwrapOrThrow(
-        await uploadToBucket(audioPath!, title.slice(0, 20)),
+        await uploadToBucket(audioPath!, removeEmjoies(title).slice(0, 20)),
         "Upload failed",
       );
     } catch (err) {
-      console.error("ImageKit upload error:", err);
+      console.error("Cloudflare upload error:", err);
       return {
         success: false,
         message: "Failed to upload reel media",
@@ -73,8 +74,8 @@ export const addInstagramReel = async ({
         const newReel = await tx.reel.create({
           data: {
             ig_reel_id: igReelId,
-            title,
-            fileName: title.slice(0, 20),
+            title: removeEmjoies(title),
+            fileName: removeEmjoies(title).slice(0, 20),
             audioTranscribe: transcribe ?? "",
             niche: niche ?? "",
             subNiche: subNiche ?? "",
@@ -130,3 +131,10 @@ export const addInstagramReel = async ({
     };
   }
 };
+
+function removeEmjoies(title: string) {
+  return title
+    .replace(/\p{Emoji}/gu, "")
+    .trim()
+    .toLocaleLowerCase();
+}
